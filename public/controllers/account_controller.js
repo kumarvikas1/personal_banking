@@ -1,6 +1,6 @@
 var app = angular.module('Personal-Banking',['chart.js','ngCookies','ngRoute']);
 
-app.controller('AccountController',['$scope','$http','$location','$cookies',function($scope,$http,$location,$cookies){
+app.controller('AccountController',['$scope','$http','$location','$cookies','LoginService',function($scope,$http,$location,$cookies, LoginService){
 
 $scope.accounts = '';
 $scope.acc_names='';
@@ -56,15 +56,9 @@ $scope.showTransaction = true
 
 
 $scope.login = function() {
-$http.get('http://localhost:3000/users/?userId='+$scope.username).success(function(response) {
-if(response != null && angular.fromJson(response).password==$scope.password){
-    $cookies.put("email",$scope.username)
-    $location.path("/welcome")
+    LoginService.Login($scope.username,$scope.password);
+    $scope.isError = LoginService.isErrorValue;
 }
-else {
-    $scope.isError=true 
-}
-})}
 
 
 $scope.register = function() {
@@ -99,6 +93,33 @@ $location.path("/welcome")
 }
 
 }]);
+
+app.factory('LoginService',
+    ['$http', '$cookies', '$rootScope','$location',
+    function ($http, $cookies, $rootScope,$location) {
+        var service = {};
+
+        service.Login = function (username, password) {
+
+$http.get('http://localhost:3000/users/?userId='+username).success(function(response) {
+if(response != null && angular.fromJson(response).password==password){
+    $cookies.put("email",username)
+    $location.path("/welcome")
+}
+else {
+    $rootScope.isError=true 
+}
+})
+        };
+
+        service.isErrorValue = function() {
+            return $rootScope.isError;
+        }
+
+ 
+        return service;
+    }])
+
 
 
 app.config(function($routeProvider) {
